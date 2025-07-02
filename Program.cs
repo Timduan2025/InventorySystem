@@ -40,7 +40,19 @@ void RunMenu()
         
         void GetAllProduct()
         {
-            throw new NotImplementedException();
+            Console.WriteLine("\n--- 所有產品列表 ---");
+            var products= productRepository.GetAllProducts();
+            if (products != null)
+            {
+                Console.WriteLine("--------------------");
+                Console.WriteLine("ID | Name | Price | Quantity | Status");
+                Console.WriteLine("--------------------");
+                foreach (var product in products)
+                {
+                    Console.WriteLine(product);   
+                }
+                Console.WriteLine("----------------------");
+            }
         }
         
         void SearchProduct()
