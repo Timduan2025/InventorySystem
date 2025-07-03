@@ -8,6 +8,7 @@ public class MySqlProductRepository : IProductRepository
 // java: extend -> parentObj
 {
     private readonly string _connectionString;
+
     // constructor
     public MySqlProductRepository(string connectionString)
     {
@@ -34,6 +35,7 @@ public class MySqlProductRepository : IProductRepository
                 {
                     cmd.ExecuteNonQuery();
                 }
+
                 Console.WriteLine("初始化MySql成功或已存在");
             }
             catch (MySqlException e)
@@ -67,7 +69,7 @@ public class MySqlProductRepository : IProductRepository
                         //     reader.GetInt32("quantity"));
                         // product.Status = (Product.ProductStatus)reader.GetInt32("status");
                         // products.Add(product);
-                        
+
                         // 2. obj initializer
                         products.Add(new Product(reader.GetInt32("id"),
                             reader.GetString("name"),
@@ -80,6 +82,7 @@ public class MySqlProductRepository : IProductRepository
                 }
             }
         }
+
         return products;
     }
 
@@ -92,7 +95,7 @@ public class MySqlProductRepository : IProductRepository
             // string selectSql = "SELECT * FROM products WHERE id =" + id;
             // generate by AI
             string selectSql = "SELECT * FROM products WHERE id = @id";
-            
+
             using (MySqlCommand cmd = new MySqlCommand(selectSql, connection))
             {
                 // 防止sql injection
@@ -112,6 +115,26 @@ public class MySqlProductRepository : IProductRepository
                 }
             }
         }
+
         return product;
+    }
+
+    public void AddProduct(string name, decimal price, int quantity)
+    {
+        using (var connection = new MySqlConnection(_connectionString))
+        {
+            connection.Open();
+            string insertSql =
+                "INSERT INTO products  (name, price, quantity, status) VALUES (@name, @price, @quantity, @status)";
+            using (MySqlCommand cmd = new MySqlCommand(insertSql, connection))
+            {
+                cmd.Parameters.AddWithValue("@name", name);
+                cmd.Parameters.AddWithValue("@price", price);
+                cmd.Parameters.AddWithValue("@quantity", quantity);
+                // todo refactor
+                cmd.Parameters.AddWithValue("@status", 1);
+                cmd.ExecuteNonQuery();
+            }
+        }
     }
 }
