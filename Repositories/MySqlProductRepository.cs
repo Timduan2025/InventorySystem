@@ -8,6 +8,7 @@ public class MySqlProductRepository : IProductRepository
 // java: extend -> parentObj
 {
     private readonly string _connectionString;
+    private IProductRepository _productRepositoryImplementation;
 
     // constructor
     public MySqlProductRepository(string connectionString)
@@ -82,11 +83,11 @@ public class MySqlProductRepository : IProductRepository
                 }
             }
         }
-
         return products;
     }
 
     public Product GetProductById(int id)
+    // id= or '1'='1'
     {
         Product product = null;
         using (var connection = new MySqlConnection(_connectionString))
@@ -102,8 +103,10 @@ public class MySqlProductRepository : IProductRepository
                 cmd.Parameters.AddWithValue("@id", id);
                 using (MySqlDataReader reader = cmd.ExecuteReader())
                 {
-                    if (reader.Read())
+                    while (reader.Read())
                     {
+                        //object init
+                        //inline
                         product = new Product(reader.GetInt32("id"),
                             reader.GetString("name"),
                             reader.GetDecimal("price"),
@@ -115,24 +118,68 @@ public class MySqlProductRepository : IProductRepository
                 }
             }
         }
-
         return product;
     }
 
-    public void AddProduct(string name, decimal price, int quantity)
+    public void AddProduct(Product product)
     {
         using (var connection = new MySqlConnection(_connectionString))
         {
             connection.Open();
-            string insertSql =
-                "INSERT INTO products  (name, price, quantity, status) VALUES (@name, @price, @quantity, @status)";
+            string insertSql = @"INSERT INTO products (name, price, quantity, status) 
+                                    values (@name, @price, @quantity, @status)";
             using (MySqlCommand cmd = new MySqlCommand(insertSql, connection))
             {
-                cmd.Parameters.AddWithValue("@name", name);
-                cmd.Parameters.AddWithValue("@price", price);
-                cmd.Parameters.AddWithValue("@quantity", quantity);
-                // todo refactor
-                cmd.Parameters.AddWithValue("@status", 1);
+                // 防止sql injection
+                cmd.Parameters.AddWithValue("@id", product.Id);
+                cmd.Parameters.AddWithValue("@name", product.Name);
+                cmd.Parameters.AddWithValue("@price", product.Price);
+                cmd.Parameters.AddWithValue("@quantity", product.Quantity);
+                cmd.Parameters.AddWithValue("@status", product.Status);
+                cmd.ExecuteNonQuery();
+            }
+        }
+    }
+
+    public List<Product> SearchProduct()
+    {
+        throw new NotImplementedException();
+    }
+
+    public int GetNextProductId()
+    {
+        using (var connection = new MySqlConnection(_connectionString))
+        {
+            connection.Open();
+            string selectSql = @"SELECT IFNULL(MAX(id), 0) FROM products";
+            using (MySqlCommand cmd = new MySqlCommand(selectSql, connection))
+            {
+                var result = cmd.ExecuteScalar();
+                if (result != null)
+                {
+                    return Convert.ToInt32(result) + 1;
+                }
+                return 0;
+            }
+        }
+    }
+
+    public void UpdateProduct(Product product)
+    {
+        using (var connection = new MySqlConnection(_connectionString))
+        {
+            connection.Open();
+            string insertSql = @"UPDATE products SET 
+                    name=@name, price=@price, quantity=@quantity, status=@status
+                WHERE id=@id"; 
+            using (MySqlCommand cmd = new MySqlCommand(insertSql, connection))
+            {
+                // 防止sql injection
+                cmd.Parameters.AddWithValue("@id", product.Id);
+                cmd.Parameters.AddWithValue("@name", product.Name);
+                cmd.Parameters.AddWithValue("@price", product.Price);
+                cmd.Parameters.AddWithValue("@quantity", product.Quantity);
+                cmd.Parameters.AddWithValue("@status", product.Status);
                 cmd.ExecuteNonQuery();
             }
         }
