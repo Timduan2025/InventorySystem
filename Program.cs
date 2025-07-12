@@ -11,8 +11,41 @@ using InventorySystem.Utils;
 //uid: mysql使用者名稱
 //pwd: mysql使用者密碼
 const string MYSQL_CONNECTION_STRING = "Server=localhost;Port=3306;Database=inventory_db;uid=root;pwd=Root;";
+string connectionString = "";
+string configFile = "appsettings.ini";
 
-MySqlProductRepository productRepository = new MySqlProductRepository(MYSQL_CONNECTION_STRING);
+if (File.Exists(configFile))
+{
+    Console.WriteLine($"Reading {configFile} file");
+    try
+    {
+        Dictionary<string, Dictionary<string, string>> config = ReadFile(configFile);
+
+        if (config.ContainsKey("Database"))
+        {
+            var dbConfig = config["Database"];
+            connectionString = $"Server={dbConfig["Server"]};" +
+                               $"Port={dbConfig["Port"]};" +
+                               $"Database={dbConfig["Database"]};" +
+                               $"uid={dbConfig["Uid"]};" +
+                               $"pwd={dbConfig["Pwd"]}";
+            Console.WriteLine($"讀取資料庫連接字串成功!");
+        }
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine($"錯誤:讀取配置檔案失敗:{e}");
+        // throw
+        connectionString = MYSQL_CONNECTION_STRING;
+    }
+}
+else
+{
+    Console.WriteLine($"錯誤:配置檔案{configFile}不存在");
+    connectionString = MYSQL_CONNECTION_STRING;
+}
+
+MySqlProductRepository productRepository = new MySqlProductRepository(connectionString);
 InventoryService inventoryService = new InventoryService(productRepository);
 
 // 通知功能相關
@@ -34,9 +67,11 @@ void RunMenu()
         switch (input)
         {
             case "1": GetAllProduct(); break;
-            case "2": SearchProduct(); break;
+            case "2": SearchProductById(); break;
             case "3": AddProduct(); break;
             case "4": UpdateProduct(); break;
+            case "5": SearchProduct(); break;
+            case "6": SearchLowProduct(); break;
             case "0": 
                 Console.WriteLine("Goodbye");
                 return;
@@ -47,9 +82,11 @@ void RunMenu()
             Console.WriteLine("Welcome to the inventory system!");
             Console.WriteLine("What would you like to do?");
             Console.WriteLine("1. 查看所有產品");
-            Console.WriteLine("2. 查詢產品");
+            Console.WriteLine("2. 查詢產品ID");
             Console.WriteLine("3. 新增產品");
             Console.WriteLine("4. 更新產品");
+            Console.WriteLine("5. 查詢產品");
+            Console.WriteLine("6. 查詢庫存偏低");
             Console.WriteLine("0. 離開");
         }
         
@@ -69,10 +106,9 @@ void RunMenu()
                 Console.WriteLine("----------------------");
             }
             emailService.NotifyUser("Tom", "查詢完成");
-            
         }
         
-        void SearchProduct()
+        void SearchProductById()
         {
                 Console.WriteLine("輸入欲查詢的產品編號");
                 int input = ReadIntLine(1);
@@ -86,7 +122,43 @@ void RunMenu()
                     Console.WriteLine(product);
                     Console.WriteLine("--------------------");
                 }
-        }    
+        }
+
+        void SearchProduct()
+        {
+            Console.WriteLine("查詢產品名稱關鍵字:");
+            string input = Console.ReadLine();
+            List<Product> products = inventoryService.SearchProduct(input);
+            if (products.Any())
+            {
+                Console.WriteLine($"------查詢條件:({input})-------");
+                Console.WriteLine("ID | Name | Price | Quantity | Status");
+                Console.WriteLine("--------------------");
+                foreach (var product in products)
+                {
+                    Console.WriteLine(product);   
+                }
+                Console.WriteLine("--------------------");
+
+            }
+        }
+
+        void SearchLowProduct()
+        {
+            List<Product> products = inventoryService.SearchLowProduct();
+            if (products.Any())
+            {
+                Console.WriteLine($"------產品低庫存清單-------");
+                Console.WriteLine("ID | Name | Price | Quantity | Status");
+                Console.WriteLine("--------------------");
+                foreach (var product in products)
+                {
+                    Console.WriteLine(product);   
+                }
+                Console.WriteLine("--------------------");
+
+            }
+        }
         
         void AddProduct()
         {
@@ -176,4 +248,33 @@ decimal ReadDecimalLine(decimal defaultValue = 0.0m)
             Console.WriteLine("請輸入有效數字。");
         }
     }
+}
+
+Dictionary<string, Dictionary<string, string>> ReadFile(string s)
+{
+    var config = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+    string currentSection = "";
+
+    foreach (string line in File.ReadLines(s))
+    {
+        string trimmedLine = line.Trim();
+        if (trimmedLine.StartsWith("#") || string.IsNullOrWhiteSpace(trimmedLine))
+        {
+            continue; // 跳過註釋和空行
+        }
+
+        if (trimmedLine.StartsWith("[") && trimmedLine.EndsWith("]"))
+        {
+            currentSection = trimmedLine.Substring(1, trimmedLine.Length - 2);
+            config[currentSection] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        }
+        else if (currentSection != "" && trimmedLine.Contains("="))
+        {
+            int equalsIndex = trimmedLine.IndexOf('=');
+            string key = trimmedLine.Substring(0, equalsIndex).Trim();
+            string value = trimmedLine.Substring(equalsIndex + 1).Trim();
+            config[currentSection][key] = value;
+        }
+    }
+    return config;
 }

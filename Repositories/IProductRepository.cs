@@ -1,4 +1,5 @@
 ﻿using InventorySystem.Models;
+using MySql.Data.MySqlClient;
 
 namespace InventorySystem.Repositories;
 

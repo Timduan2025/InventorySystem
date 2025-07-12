@@ -38,7 +38,7 @@ public class InventoryService
         }
     }
 
-    public Product SearchProduct()
+    public Product SearchProductById()
     {
         Console.Write("請輸入產品編號：");
         if (int.TryParse(Console.ReadLine(), out int id))
@@ -51,7 +51,6 @@ public class InventoryService
 
             return product;
         }
-
         Console.WriteLine("輸入格式錯誤。");
         return null;
     }
@@ -133,6 +132,58 @@ public class InventoryService
         catch (Exception e)
         {
             Console.WriteLine($"錯誤:更新產品失敗:{e.Message}");
+        }
+    }
+
+    public List<Product> SearchProduct(string? input)
+    {
+        try
+        {
+            List<Product> products = _productRepository.GetAllProducts();
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return products;
+            }
+
+            var results = products
+                .Where(product => product.Name.ToLower().Contains(input.ToLower()))
+                .OrderBy(product => product.Name).
+                ToList();
+            
+            if (!results.Any())
+            {
+                Console.WriteLine("No products found");
+            }
+            return results;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("讀取產品列表失敗:{e.Message}");
+            return new List<Product>();
+        }
+    }
+
+    public List<Product> SearchLowProduct()
+    {
+        try
+        {
+            List<Product> products = _productRepository.GetAllProducts();
+
+            var results = products
+                .Where(product => product.Quantity < 20)
+                .OrderBy(product => product.Name).
+                ToList();
+            
+            if (!results.Any())
+            {
+                Console.WriteLine("No products found");
+            }
+            return results;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("讀取產品列表失敗:{e.Message}");
+            return new List<Product>();
         }
     }
 }

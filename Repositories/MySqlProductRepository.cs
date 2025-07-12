@@ -9,6 +9,7 @@ public class MySqlProductRepository : IProductRepository
 {
     private readonly string _connectionString;
     private IProductRepository _productRepositoryImplementation;
+    private IProductRepository _productRepositoryImplementation1;
 
     // constructor
     public MySqlProductRepository(string connectionString)
