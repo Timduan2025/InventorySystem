@@ -8,6 +8,7 @@ public class InventoryService
 {
     // 1. 資料庫相關
     private readonly IProductRepository _productRepository;
+
     // 透過建構子，注入介面
     public InventoryService(IProductRepository productRepository)
     {
@@ -24,6 +25,7 @@ public class InventoryService
             {
                 Console.WriteLine("No products found");
             }
+
             // 2. 通知功能相關
             // 使用EmailNotifier
             INotifier emailNotifier = new EmailNotifier();
@@ -51,25 +53,26 @@ public class InventoryService
 
             return product;
         }
+
         Console.WriteLine("輸入格式錯誤。");
         return null;
     }
 
-    public Product GetProductById(int id)
+    public OperationResults<Product> GetProductById(int id)
     {
         try
         {
             Product product = _productRepository.GetProductById(id);
             if (product == null)
             {
-                Console.WriteLine("No products found");
+                return OperationResults<Product>.ErrorResult("查無該產品");
             }
-            return product;
+
+            return OperationResults<Product>.SuccessResult("操作成功", product);
         }
         catch (Exception e)
         {
-            Console.WriteLine("讀取產品列表失敗:{e.Message}");
-            return new Product();
+            return OperationResults<Product>.ErrorResult($"讀取產品列表失敗:{e.Message}");
         }
     }
 
@@ -81,16 +84,19 @@ public class InventoryService
             {
                 throw new ArgumentException("產品名稱不能為空。");
             }
+
             //價格必須大於零
             if (price <= 0)
             {
                 throw new ArgumentException("價格必須大於零。");
             }
+
             //數量不能小於零
             if (quantity < 0)
             {
                 throw new ArgumentException("數量不能小於零。");
             }
+
             // 嘗試透過Repository新增產品
             var product = new Product(
                 _productRepository.GetNextProductId(),
@@ -112,18 +118,21 @@ public class InventoryService
             {
                 throw new ArgumentException("產品名稱不能為空。");
             }
+
             if (price <= 0)
             {
                 throw new ArgumentException("價格必須大於零。");
             }
+
             if (quantity < 0)
             {
                 throw new ArgumentException("數量不能小於零。");
             }
+
             //執行更新(覆蓋origin product的屬性)
             product.Name = name;
             product.Price = price;
-            product.Quantity =  quantity;
+            product.Quantity = quantity;
             product.UpdateStatus();
             //呼叫repository
             _productRepository.UpdateProduct(product);
@@ -147,13 +156,13 @@ public class InventoryService
 
             var results = products
                 .Where(product => product.Name.ToLower().Contains(input.ToLower()))
-                .OrderBy(product => product.Name).
-                ToList();
-            
+                .OrderBy(product => product.Name).ToList();
+
             if (!results.Any())
             {
                 Console.WriteLine("No products found");
             }
+
             return results;
         }
         catch (Exception e)
@@ -171,13 +180,14 @@ public class InventoryService
 
             var results = products
                 .Where(product => product.Quantity < 20)
-                .OrderBy(product => product.Name).
-                ToList();
-            
+                .Where(product => product.Status == Product.ProductStatus.LowStock)
+                .OrderBy(product => product.Name).ToList();
+
             if (!results.Any())
             {
                 Console.WriteLine("No products found");
             }
+
             return results;
         }
         catch (Exception e)
@@ -185,5 +195,38 @@ public class InventoryService
             Console.WriteLine("讀取產品列表失敗:{e.Message}");
             return new List<Product>();
         }
+    }
+
+    public List<Product> SearchOutOfProduct()
+    {
+        try
+        {
+            List<Product> outOfProducts = _productRepository.GetAllOutOfProduct();
+
+            if (!outOfProducts.Any())
+            {
+                Console.WriteLine("No products found");
+            }
+
+            return outOfProducts;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("讀取產品列表失敗:{e.Message}");
+            return new List<Product>();
+        }
+    }
+
+    public void AdjustProductQuantity(Product product, int quantity)
+    {
+        int newQuantity = product.Quantity + quantity;
+        if (newQuantity < 0)
+        {
+            Console.WriteLine($"庫存不足，嘗試操作 出庫{quantity}。");
+        }
+        product.Quantity = newQuantity;
+        product.UpdateStatus();
+        _productRepository.UpdateProduct(product);
+        Console.WriteLine($"成功更新產品:{product.Name}，當前庫存為 {newQuantity}");
     }
 }

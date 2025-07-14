@@ -72,6 +72,8 @@ void RunMenu()
             case "4": UpdateProduct(); break;
             case "5": SearchProduct(); break;
             case "6": SearchLowProduct(); break;
+            case "7": SearchOutOfProduct(); break;
+            case "8": AdjustProductQuantity(); break;
             case "0": 
                 Console.WriteLine("Goodbye");
                 return;
@@ -87,6 +89,8 @@ void RunMenu()
             Console.WriteLine("4. 更新產品");
             Console.WriteLine("5. 查詢產品");
             Console.WriteLine("6. 查詢庫存偏低");
+            Console.WriteLine("7. 查詢已缺貨產品");
+            Console.WriteLine("8. 調整產品庫存(出庫/入庫)");
             Console.WriteLine("0. 離開");
         }
         
@@ -113,13 +117,13 @@ void RunMenu()
                 Console.WriteLine("輸入欲查詢的產品編號");
                 int input = ReadIntLine(1);
                 // var product = productRepository.GetProductById(input)
-                var product = inventoryService.GetProductById(input);
-                if (product != null)
+                OperationResults<Product> product = inventoryService.GetProductById(input);
+                if (!product.Success)
                 {
                     Console.WriteLine("--------------------");
                     Console.WriteLine("ID | Name | Price | Quantity | Status");
                     Console.WriteLine("--------------------");
-                    Console.WriteLine(product);
+                    Console.WriteLine(product.Data);
                     Console.WriteLine("--------------------");
                 }
         }
@@ -156,7 +160,22 @@ void RunMenu()
                     Console.WriteLine(product);   
                 }
                 Console.WriteLine("--------------------");
-
+            }
+        }
+        
+        void SearchOutOfProduct()
+        {
+            var products = inventoryService.SearchOutOfProduct();
+            if (products.Any())
+            {
+                Console.WriteLine($"------產品零庫存清單-------");
+                Console.WriteLine("ID | Name | Price | Quantity | Status");
+                Console.WriteLine("--------------------");
+                foreach (var product in products)
+                {
+                    Console.WriteLine(product);   
+                }
+                Console.WriteLine("--------------------");
             }
         }
         
@@ -178,9 +197,10 @@ void RunMenu()
             Console.WriteLine("請輸入要更新的產品ID");
             int id = ReadIntLine();
             //找到對應產品
-            var product = inventoryService.GetProductById(id);
-            if (product == null)
+            OperationResults<Product> product = inventoryService.GetProductById(id);
+            if (!product.Success)
             {
+                Console.WriteLine("product.Message");
                 return;
             }
             Console.WriteLine("輸入新名稱:");
@@ -190,7 +210,22 @@ void RunMenu()
             Console.WriteLine("輸入新數量:");
             int quantity = ReadIntLine();
             // service.UpdateProduct
-            inventoryService.UpdateProduct(product, name, price, quantity);
+            inventoryService.UpdateProduct(product.Data, name, price, quantity);
+        }
+        
+        void AdjustProductQuantity()
+        {
+            Console.WriteLine("請輸入要調整庫存的產品ID");
+            int id = ReadIntLine();
+            OperationResults<Product> product = inventoryService.GetProductById(id);
+            if (!product.Success)
+            {
+                Console.WriteLine("product.Message");
+                return;
+            }
+            Console.WriteLine("輸入調整數量(正數入庫/負數出庫):");
+            int quantity = ReadIntLine();
+            inventoryService.AdjustProductQuantity(product.Data, quantity);
         }
         
         int ReadInt(string input)

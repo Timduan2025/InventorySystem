@@ -11,4 +11,5 @@ public interface IProductRepository
     List<Product> SearchProduct();
     int GetNextProductId();
     void UpdateProduct(Product product);
+    List<Product> GetAllOutOfProduct ();
 }

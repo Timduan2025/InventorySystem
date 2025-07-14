@@ -10,6 +10,7 @@ public class MySqlProductRepository : IProductRepository
     private readonly string _connectionString;
     private IProductRepository _productRepositoryImplementation;
     private IProductRepository _productRepositoryImplementation1;
+    private List<Product> _getAllOutOfProduct;
 
     // constructor
     public MySqlProductRepository(string connectionString)
@@ -184,5 +185,32 @@ public class MySqlProductRepository : IProductRepository
                 cmd.ExecuteNonQuery();
             }
         }
+    }
+
+    public List<Product> GetAllOutOfProduct()
+    {
+        List<Product> products = new List<Product>();
+        using (var connection = new MySqlConnection(_connectionString))
+        {
+            connection.Open();
+            string selectSql = @"SELECT products FROM status = 2";
+            using (MySqlCommand cmd = new MySqlCommand(selectSql, connection))
+            {
+                using (MySqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        products.Add(new Product(reader.GetInt32("id"),
+                            reader.GetString("name"),
+                            reader.GetDecimal("price"),
+                            reader.GetInt32("quantity"))
+                        {
+                            Status = (Product.ProductStatus)reader.GetInt32("status")
+                        });
+                    }
+                }
+            }
+        }
+        return products;
     }
 }
