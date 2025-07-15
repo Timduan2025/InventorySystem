@@ -132,13 +132,14 @@ void RunMenu()
         {
             Console.WriteLine("查詢產品名稱關鍵字:");
             string input = Console.ReadLine();
-            List<Product> products = inventoryService.SearchProduct(input);
-            if (products.Any())
+            OperationResults<List<Product>> results = inventoryService.SearchProduct(input);
+
+            if (!results.Data.Any())
             {
                 Console.WriteLine($"------查詢條件:({input})-------");
                 Console.WriteLine("ID | Name | Price | Quantity | Status");
                 Console.WriteLine("--------------------");
-                foreach (var product in products)
+                foreach (var product in results.Data)
                 {
                     Console.WriteLine(product);   
                 }

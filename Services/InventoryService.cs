@@ -144,14 +144,14 @@ public class InventoryService
         }
     }
 
-    public List<Product> SearchProduct(string? input)
+    public OperationResults<List<Product>> SearchProduct(string? input)
     {
         try
         {
             List<Product> products = _productRepository.GetAllProducts();
             if (string.IsNullOrWhiteSpace(input))
             {
-                return products;
+                return OperationResults<List<Product>>.ErrorResult("請勿使用空字串");
             }
 
             var results = products
@@ -162,13 +162,11 @@ public class InventoryService
             {
                 Console.WriteLine("No products found");
             }
-
-            return results;
+            return OperationResults<List<Product>>.SuccessResult("操作成功", results);
         }
         catch (Exception e)
         {
-            Console.WriteLine("讀取產品列表失敗:{e.Message}");
-            return new List<Product>();
+            return OperationResults<List<Product>>.ErrorResult("讀取產品列表失敗:{e.Message}");
         }
     }
 
