@@ -118,7 +118,7 @@ void RunMenu()
                 int input = ReadIntLine(1);
                 // var product = productRepository.GetProductById(input)
                 OperationResults<Product> product = inventoryService.GetProductById(input);
-                if (!product.Success)
+                if (product.Success)
                 {
                     Console.WriteLine("--------------------");
                     Console.WriteLine("ID | Name | Price | Quantity | Status");
@@ -134,7 +134,7 @@ void RunMenu()
             string input = Console.ReadLine();
             OperationResults<List<Product>> results = inventoryService.SearchProduct(input);
 
-            if (!results.Data.Any())
+            if (results.Data.Any())
             {
                 Console.WriteLine($"------查詢條件:({input})-------");
                 Console.WriteLine("ID | Name | Price | Quantity | Status");

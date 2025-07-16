@@ -183,7 +183,7 @@ public class InventoryService
 
             if (!results.Any())
             {
-                Console.WriteLine("No products found");
+                Console.WriteLine("No low products found");
             }
 
             return results;
@@ -203,14 +203,13 @@ public class InventoryService
 
             if (!outOfProducts.Any())
             {
-                Console.WriteLine("No products found");
+                Console.WriteLine("No out of products found");
             }
-
             return outOfProducts;
         }
         catch (Exception e)
         {
-            Console.WriteLine("讀取產品列表失敗:{e.Message}");
+            Console.WriteLine("No out of products found");
             return new List<Product>();
         }
     }
