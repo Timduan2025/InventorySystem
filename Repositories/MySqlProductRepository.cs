@@ -39,11 +39,11 @@ public class MySqlProductRepository : IProductRepository
                     cmd.ExecuteNonQuery();
                 }
 
-                Console.WriteLine("初始化MySql成功或已存在");
+                Console.WriteLine("[Product]初始化MySql成功或已存在");
             }
             catch (MySqlException e)
             {
-                Console.WriteLine($"初始化MySql失敗:{e.Message}");
+                Console.WriteLine($"[Product]初始化MySql失敗:{e.Message}");
             }
         }
     }

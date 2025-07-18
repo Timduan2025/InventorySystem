@@ -48,6 +48,7 @@ else
 MySqlProductRepository productRepository = new MySqlProductRepository(connectionString);
 InventoryService inventoryService = new InventoryService(productRepository);
 
+MySqlSupplierRepository supplierRepository = new MySqlSupplierRepository(connectionString);
 // 通知功能相關
 // 使用EmailNotifier
 INotifier emailNotifier = new EmailNotifier();
@@ -74,6 +75,7 @@ void RunMenu()
             case "6": SearchLowProduct(); break;
             case "7": SearchOutOfProduct(); break;
             case "8": AdjustProductQuantity(); break;
+            case "9": SupplierManagementMenu(); break;
             case "0": 
                 Console.WriteLine("Goodbye");
                 return;
@@ -91,7 +93,31 @@ void RunMenu()
             Console.WriteLine("6. 查詢庫存偏低");
             Console.WriteLine("7. 查詢已缺貨產品");
             Console.WriteLine("8. 調整產品庫存(出庫/入庫)");
+            Console.WriteLine("9. 管理供應商");
             Console.WriteLine("0. 離開");
+        }
+        
+        void SupplierManagementMenu()
+        {
+            while (true)
+            {
+                Console.WriteLine("供應商管理");
+                Console.WriteLine("1.新增供應商");
+                Console.WriteLine("2.更新供應商");
+                Console.WriteLine("3.查詢供應商");
+                Console.WriteLine("4.查詢所有供應商");
+                Console.WriteLine("0.回到主選單");
+                
+                string input = Console.ReadLine();
+                switch (input)
+                {
+                    case "1": break;
+                    case "2": break;
+                    case "3": break;
+                    case "4": break;
+                    case "0": return;
+                }
+            }
         }
         
         void GetAllProduct()
